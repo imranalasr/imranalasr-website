@@ -58,17 +58,17 @@ export default async function Footer({ locale }: { locale: Locale }) {
             <h2 className="footer-heading">{t.footer.contact}</h2>
             <ul>
               <li>
-                <a href={`tel:${c.contact.phonePrimary}`} className="link-sweep tabular">
+                <a href={`tel:${c.contact.phonePrimary}`} className="link-sweep tabular" dir="ltr">
                   {c.contact.phonePrimaryDisplay}
                 </a>
               </li>
               <li>
-                <a href={`tel:${c.contact.phoneSecondary}`} className="link-sweep tabular">
+                <a href={`tel:${c.contact.phoneSecondary}`} className="link-sweep tabular" dir="ltr">
                   {c.contact.phoneSecondaryDisplay}
                 </a>
               </li>
               <li>
-                <a href={`mailto:${c.contact.email}`} className="link-sweep">
+                <a href={`mailto:${c.contact.email}`} className="link-sweep" dir="ltr">
                   {c.contact.email}
                 </a>
               </li>

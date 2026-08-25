@@ -71,14 +71,28 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
                 </span>
 
                 <span className="project-row-body">
-                  <span className="project-row-loc tabular" data-reveal="up">
-                    {t.common.location} · {p.location[locale]}
+                  <span className="project-row-loc" data-reveal="up">
+                    {t.projects.recordRegion} · {p.location[locale]}
                   </span>
                   <span className="project-row-title" data-reveal="up">
                     {p.title[locale]}
                   </span>
                   <span className="project-row-summary" data-reveal="up">
                     {p.summary[locale]}
+                  </span>
+                  {/* The same two figures the detail page's record opens
+                      with, so a row in the index and the sheet it leads to
+                      are plainly the same document. Kept to two: an index
+                      row is scanned, not read. */}
+                  <span className="project-row-record" data-reveal="up">
+                    <span>
+                      {t.projects.recordScope}
+                      <b className="tabular">{p.documented[locale].length}</b>
+                    </span>
+                    <span>
+                      {t.projects.recordFrames}
+                      <b className="tabular">{p.gallery.length}</b>
+                    </span>
                   </span>
                   <span className="project-row-cta" data-reveal="up">
                     {t.common.viewProject}

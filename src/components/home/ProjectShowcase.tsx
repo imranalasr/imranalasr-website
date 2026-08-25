@@ -216,11 +216,12 @@ export default function ProjectShowcase({
         scrollTrigger: {
           trigger: stage,
           start: "top top",
-          /* Scroll length per beat. A project's beat is a little under one
-             screen of scrolling, of which roughly half is dead hold — long
-             enough to read the scope lines without the scene feeling like
-             it is waiting for you. */
-          end: `+=${Math.round(total * 85)}%`,
+          /* Scroll length per beat. Half a screen of scrolling per project,
+             down from a little under a full one: the hold inside each beat is
+             what was long, not the reading, and five projects at 85% put the
+             better part of five viewports between the heading and the end of
+             the section. The beats keep their relative weights. */
+          end: `+=${Math.round(total * 51)}%`,
           scrub: 0.8,
           pin: stage,
           pinSpacing: true,

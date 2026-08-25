@@ -199,7 +199,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         data-surface-section="forest"
         data-seam="paper"
       >
-        <div className="blueprint-grid cta-grid" aria-hidden="true" />
         <div className="page cta-inner">
           <p className="eyebrow" data-reveal="up">
             {t.home.ctaEyebrow}
@@ -223,15 +222,32 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </Link>
             </Magnetic>
           </div>
-          <p className="cta-direct" data-reveal="up">
-            <span className="cta-direct-label">{t.home.ctaDirect}</span>
-            <a href={`tel:${company.contact.phonePrimary}`} className="bracket link-bracket tabular">
-              {company.contact.phonePrimaryDisplay}
-            </a>
-            <a href={`mailto:${company.contact.email}`} className="bracket link-bracket">
-              {company.contact.email}
-            </a>
-          </p>
+          {/* The two direct channels, one per row. A phone number and an
+              email address are Latin-script values in an Arabic sentence, so
+              each is isolated with its own `dir="ltr"` — without it the
+              bidirectional algorithm reorders the digits against the
+              surrounding text and runs the two together. */}
+          <div className="cta-direct" data-reveal="up">
+            <p className="cta-direct-label">{t.home.ctaDirect}</p>
+            <ul className="cta-channels">
+              <li>
+                <a href={`tel:${company.contact.phonePrimary}`} className="cta-channel">
+                  <span className="cta-channel-label">{t.common.call}</span>
+                  <span className="cta-channel-value tabular" dir="ltr">
+                    {company.contact.phonePrimaryDisplay}
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${company.contact.email}`} className="cta-channel">
+                  <span className="cta-channel-label">{t.common.email}</span>
+                  <span className="cta-channel-value" dir="ltr">
+                    {company.contact.email}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
     </>

@@ -54,13 +54,13 @@ export default async function QuotePage({ params }: { params: Promise<{ locale: 
               <ul className="contact-channels">
                 <li>
                   <span>{t.common.call}</span>
-                  <a href={`tel:${c.contact.phonePrimary}`} className="link-sweep tabular">
+                  <a href={`tel:${c.contact.phonePrimary}`} className="link-sweep tabular" dir="ltr">
                     {c.contact.phonePrimaryDisplay}
                   </a>
                 </li>
                 <li>
                   <span>{t.common.email}</span>
-                  <a href={`mailto:${c.contact.email}`} className="link-sweep">
+                  <a href={`mailto:${c.contact.email}`} className="link-sweep" dir="ltr">
                     {c.contact.email}
                   </a>
                 </li>

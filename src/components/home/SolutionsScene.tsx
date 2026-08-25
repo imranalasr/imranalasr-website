@@ -118,7 +118,18 @@ export default function SolutionsScene({
     []
   );
 
-  const { at, goTo } = useStagedScene({ root, count: n, beat: 62, stage });
+  /*
+   * Read as a list, not held as a sheet.
+   *
+   * The credibility scene immediately above this one is staged, and two
+   * staged sections back to back turned a deliberate device into the page's
+   * default gear: the same wipe, the same held frame, the same progress
+   * column, twice, for three viewports each. The packages are four short
+   * panels and lose nothing by being read down — which is exactly how every
+   * phone has always seen them, so this is the composition the section was
+   * already authored for rather than a degraded one.
+   */
+  const { at, goTo } = useStagedScene({ root, count: n, beat: 37, enabled: false, stage });
 
   if (!n) return null;
   const arrow = locale === "ar" ? "←" : "→";

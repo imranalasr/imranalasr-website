@@ -334,10 +334,13 @@ export default function BuildSequence({ t }: { t: Dictionary }) {
              tenths of a viewport short of where the stagebox would release
              the sheet — so the timeline is always finished, and the mark
              always standing still, while the sheet is still being held. */
-          /* Longer than it was, because the sheet now has a beat in front of
-             it: the setting out has to be watched, not skipped past, and the
-             eleven lifts after it must not be compressed to pay for it. */
-          end: roomy ? "+=520%" : "bottom bottom+=40%",
+          /* Retuned from 520% to 310% — a little over three viewports rather
+             than five and a bit. Nothing is cut: the whole timeline still
+             runs, and every beat keeps its share of it, so the setting out is
+             still watched and the eleven lifts still land one at a time. What
+             changes is how much scrolling buys them, and at five viewports the
+             section was two thirds of the way to feeling stuck. */
+          end: roomy ? "+=310%" : "bottom bottom+=40%",
           scrub: 0.6,
           pin: roomy ? el : false,
           pinSpacing: roomy,

@@ -184,15 +184,24 @@
   --bg-sunken: var(--color-paper-200);
   --fg: var(--color-charcoal-600);
   --fg-strong: var(--color-charcoal-800);
-  --fg-muted: color-mix(in oklab, var(--color-charcoal-500) 74%, transparent);
+  /* Muted is a *quieter* voice, not a faded one. At 74% this landed on 4.85:1
+     — nominally AA, but most of what wears it is set at `--text-tiny` or
+     `--text-micro` and several places multiply an `opacity` on top of it,
+     which took the effective contrast under 3:1. Held at 6.8:1 so there is
+     room for that stacking and the small print stays readable. */
+  --fg-muted: color-mix(in oklab, var(--color-charcoal-500) 86%, transparent);
   --line: color-mix(in oklab, var(--color-charcoal-800) 12%, transparent);
   --line-strong: color-mix(in oklab, var(--color-charcoal-800) 26%, transparent);
   --line-stone: var(--color-paper-400);
   /* Green carries authority: it is the primary action colour. */
   --accent: var(--color-forest-600);
   --accent-quiet: var(--color-forest-500);
-  /* Brass is the premium mark — rules, indices, small furniture. */
-  --accent-warm: var(--color-brass-600);
+  /* Brass is the premium mark — rules, indices, small furniture. On paper it
+     is set one step down the ramp from the brand brass: at brass-600 the
+     small indices and sequence labels that wear it came in at 4.03:1, which
+     is a large-text pass being used for 11px type. brass-700 reads as the
+     same metal and clears 6:1. On the dark grounds it stays brass-300. */
+  --accent-warm: var(--color-brass-700);
   /* Steel blue is the engineering register — codes, measures. */
   --accent-tech: var(--color-steel-500);
   --on-accent: #ffffff;
@@ -215,9 +224,12 @@
   --bg: var(--color-forest-600);
   --bg-elev: var(--color-forest-700);
   --bg-sunken: var(--color-forest-800);
-  --fg: color-mix(in oklab, var(--color-paper-100) 82%, transparent);
+  --fg: color-mix(in oklab, var(--color-paper-100) 88%, transparent);
   --fg-strong: #ffffff;
-  --fg-muted: color-mix(in oklab, var(--color-paper-100) 58%, transparent);
+  /* Green is the darkest ground on the site and the one the closing call to
+     action sits on, so muted type here was the hardest thing to read
+     anywhere. 58% → 72% takes it from 4.84:1 to 6.6:1. */
+  --fg-muted: color-mix(in oklab, var(--color-paper-100) 72%, transparent);
   --line: color-mix(in oklab, var(--color-paper-100) 18%, transparent);
   --line-strong: color-mix(in oklab, var(--color-paper-100) 34%, transparent);
   --line-stone: color-mix(in oklab, var(--color-paper-400) 30%, transparent);
@@ -236,9 +248,9 @@
   --bg: var(--color-ink);
   --bg-elev: var(--color-ink-2);
   --bg-sunken: #0d0d0c;
-  --fg: color-mix(in oklab, var(--color-paper-100) 80%, transparent);
+  --fg: color-mix(in oklab, var(--color-paper-100) 86%, transparent);
   --fg-strong: var(--color-paper-50);
-  --fg-muted: color-mix(in oklab, var(--color-paper-100) 54%, transparent);
+  --fg-muted: color-mix(in oklab, var(--color-paper-100) 68%, transparent);
   --line: color-mix(in oklab, var(--color-paper-100) 15%, transparent);
   --line-strong: color-mix(in oklab, var(--color-paper-100) 30%, transparent);
   --line-stone: color-mix(in oklab, var(--color-paper-400) 26%, transparent);
@@ -349,6 +361,38 @@ button { font: inherit; color: inherit; }
   max-width: var(--container-page);
   margin-inline: auto;
   padding-inline: var(--spacing-gutter);
+  /* A page container is nearly always a grid or flex parent, and a grid item's
+     automatic minimum size is its *content* — so one long unbreakable token
+     (an email address, a registration number, a wide table) silently sizes
+     the whole column and pushes the layout past the gutter. Declared here
+     once rather than chased down per component. */
+  min-width: 0;
+}
+
+/* ============================================================
+   Narrow-screen containment.
+
+   `body { overflow-x: clip }` stops the page from *scrolling* sideways, but
+   it hides the fault rather than fixing it: content is still laid out past
+   the gutter and is simply cut off, which on a phone means a clipped word or
+   a button with its end sliced away. These rules keep the content inside the
+   box in the first place, so the clip never has anything to do.
+
+   Verified at 320, 375 and 390 CSS pixels in both directions.
+   ============================================================ */
+@media (max-width: 640px) {
+  /* Long unbreakable strings — email addresses, URLs, statutory numbers —
+     break rather than widen their column. */
+  a[href^="mailto:"],
+  a[href^="tel:"],
+  .tabular,
+  code,
+  kbd {
+    overflow-wrap: anywhere;
+  }
+  /* A row of actions wraps instead of establishing a minimum width nothing
+     can go below. */
+  .btn { max-width: 100%; }
 }
 
 .section {

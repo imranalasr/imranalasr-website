@@ -34,17 +34,32 @@ export type StagedScene = {
 export function useStagedScene({
   root,
   count,
+  /**
+   * Whether this section may hold a sheet at all. A caller passes `false` to
+   * stay in its own authored static state at every width — which is a real
+   * choice, not a fallback: the static composition is complete, and a page
+   * that stages two sections in a row makes the device read as a habit
+   * rather than as emphasis.
+   */
+  enabled = true,
   /** Scroll before the first item locks in, as a share of one item's beat. */
   lead = 0.45,
   /** And after the last, so it is plainly read before the sheet is let go. */
   tail = 0.4,
-  /** How much scroll one item's beat is worth, as a share of the viewport. */
-  beat = 62,
+  /**
+   * How much scroll one item's beat is worth, as a share of the viewport.
+   * Retuned from 62 to 37: a held sheet is read in place, so the beat only
+   * has to be long enough to register the swap and read the panel — past
+   * that it is the reader waiting for the page rather than the other way
+   * round.
+   */
+  beat = 37,
   /** Called once per item with its own timeline and beat, to stage it. */
   stage,
 }: {
   root: RefObject<HTMLElement | null>;
   count: number;
+  enabled?: boolean;
   lead?: number;
   tail?: number;
   beat?: number;
@@ -64,6 +79,10 @@ export function useStagedScene({
   /* Whether there is room to hold a sheet. State rather than a one-off read:
      the answer changes when a window is dragged or a tablet turned. */
   useEffect(() => {
+    if (!enabled) {
+      setStaged(false);
+      return;
+    }
     const room = window.matchMedia("(min-width: 1000px) and (min-height: 640px)");
     const still = window.matchMedia("(prefers-reduced-motion: reduce)");
     const decide = () =>
@@ -79,7 +98,7 @@ export function useStagedScene({
       room.removeEventListener("change", decide);
       still.removeEventListener("change", decide);
     };
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     const el = root.current;

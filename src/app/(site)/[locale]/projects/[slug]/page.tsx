@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditorialGallery from "@/components/EditorialGallery";
 import ProjectLink from "@/components/ProjectLink";
+import ProjectRecord, { type RecordField } from "@/components/ProjectRecord";
 import { MaskLines } from "@/components/MaskLines";
 import { getDictionary } from "@/i18n/dictionaries";
 import { href, isLocale, locales, type Locale } from "@/i18n/config";
@@ -59,6 +60,27 @@ export default async function ProjectDetail({ params }: { params: Promise<{ loca
   const next = projects[(index + 1) % projects.length];
   const related = allServices.filter((s) => project.relatedServices.includes(s.slug));
 
+  /*
+   * The project record. Every value here is already held about this project:
+   * the region it names, the registered work groups it links to, how many
+   * items its own photographs document, and how many frames there are.
+   *
+   * Year and status are listed so the shape of the record is complete and the
+   * rows are ready — `ProjectRecord` drops a field whose value is absent, so
+   * they cost nothing while no document supports them. Do not fill either
+   * from inference: `src/content/projects.ts` deliberately declares no date,
+   * status, client, value or duration field, and the content tests enforce
+   * that.
+   */
+  const record: RecordField[] = [
+    { label: t.projects.recordRegion, value: project.location[locale] },
+    { label: t.projects.recordType, value: related.map((s) => s.title[locale]).join(" · ") },
+    { label: t.projects.recordScope, value: project.documented[locale].length, tabular: true },
+    { label: t.projects.recordFrames, value: project.gallery.length, tabular: true },
+    // { label: t.projects.recordYear,   value: <year>,   tabular: true },
+    // { label: t.projects.recordStatus, value: <status> },
+  ];
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CreativeWork",
@@ -99,16 +121,8 @@ export default async function ProjectDetail({ params }: { params: Promise<{ loca
             </Link>
           </nav>
           <MaskLines as="h1" className="project-title" lines={[project.title[locale]]} />
-          <dl className="project-facts">
-            <div>
-              <dt>{t.common.location}</dt>
-              <dd className="tabular">{project.location[locale]}</dd>
-            </div>
-            <div>
-              <dt>{t.common.gallery}</dt>
-              <dd className="tabular">{project.gallery.length}</dd>
-            </div>
-          </dl>
+          <p className="project-record-label">{t.projects.recordTitle}</p>
+          <ProjectRecord fields={record} className="project-record-cover" />
         </div>
       </section>
 

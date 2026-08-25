@@ -38,9 +38,17 @@ export default function QuoteForm({ locale, t, whatsappBase }: { locale: Locale;
   }
 
   return (
+    /*
+     * Twelve fields in one flat two-column grid asked the reader to work out
+     * where the form changes subject. It is the same twelve fields, the same
+     * names and the same validation — grouped into the three questions the
+     * form is actually asking: who is asking, what the project is, and when
+     * and how to come back to them. `FormData` reads named controls wherever
+     * they sit, so the grouping is presentational only.
+     */
     <form
       ref={formRef}
-      className="form-grid"
+      className="form-flow"
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
@@ -49,91 +57,111 @@ export default function QuoteForm({ locale, t, whatsappBase }: { locale: Locale;
     >
       <Honeypot />
 
-      <Field label={f.name} name="name" required error={errors.name}>
-        {(p) => <input {...p} className="control" type="text" autoComplete="name" required />}
-      </Field>
+      <fieldset className="form-group">
+        <legend className="form-group-title">{f.groupContact}</legend>
+        <p className="form-group-hint">{f.groupContactHint}</p>
+        <div className="form-grid">
+          <Field label={f.name} name="name" required error={errors.name}>
+            {(p) => <input {...p} className="control" type="text" autoComplete="name" required />}
+          </Field>
 
-      <Field label={f.company} name="company" required error={errors.company}>
-        {(p) => <input {...p} className="control" type="text" autoComplete="organization" required />}
-      </Field>
+          <Field label={f.company} name="company" required error={errors.company}>
+            {(p) => <input {...p} className="control" type="text" autoComplete="organization" required />}
+          </Field>
 
-      <Field label={f.jobTitle} name="jobTitle" hint={t.common.optional} error={errors.jobTitle}>
-        {(p) => <input {...p} className="control" type="text" autoComplete="organization-title" />}
-      </Field>
+          <Field label={f.jobTitle} name="jobTitle" hint={t.common.optional} error={errors.jobTitle}>
+            {(p) => <input {...p} className="control" type="text" autoComplete="organization-title" />}
+          </Field>
 
-      <Field label={f.phone} name="phone" required error={errors.phone} hint="05XXXXXXXX">
-        {(p) => <input {...p} className="control tabular" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" required />}
-      </Field>
+          <Field label={f.phone} name="phone" required error={errors.phone} hint="05XXXXXXXX">
+            {(p) => <input {...p} className="control tabular" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" required />}
+          </Field>
 
-      <Field label={f.email} name="email" required error={errors.email}>
-        {(p) => <input {...p} className="control" type="email" autoComplete="email" dir="ltr" required />}
-      </Field>
-
-      <Field label={f.projectType} name="projectType" required error={errors.projectType}>
-        {(p) => (
-          <select {...p} className="control" defaultValue="" required>
-            <option value="" disabled>
-              {f.choose}
-            </option>
-            {PROJECT_TYPES.map((k) => (
-              <option key={k} value={k}>
-                {f.projectTypes[k]}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-
-      <Field label={f.projectLocation} name="projectLocation" required error={errors.projectLocation}>
-        {(p) => <input {...p} className="control" type="text" required />}
-      </Field>
-
-      <Field label={f.scopeOfWork} name="scopeOfWork" required error={errors.scopeOfWork} full>
-        {(p) => <input {...p} className="control" type="text" required />}
-      </Field>
-
-      <Field label={f.projectDescription} name="description" required error={errors.description} full>
-        {(p) => <textarea {...p} className="control" rows={6} required />}
-      </Field>
-
-      <Field label={f.startDate} name="startDate" error={errors.startDate}>
-        {(p) => (
-          <select {...p} className="control" defaultValue="unknown">
-            {START_WINDOWS.map((k) => (
-              <option key={k} value={k}>
-                {f.startWindows[k]}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-
-      <Field label={f.duration} name="duration" error={errors.duration}>
-        {(p) => (
-          <select {...p} className="control" defaultValue="unknown">
-            {DURATIONS.map((k) => (
-              <option key={k} value={k}>
-                {f.durations[k]}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-
-      <fieldset className="field field-radios" data-full="true">
-        <legend>{f.preferredContact}</legend>
-        <div className="radio-row">
-          {CONTACT_METHODS.map((k, i) => (
-            <label key={k} className="radio-chip">
-              <input type="radio" name="preferredContact" value={k} defaultChecked={i === 0} required />
-              <span>{f.contactMethods[k]}</span>
-            </label>
-          ))}
+          <Field label={f.email} name="email" required error={errors.email} full>
+            {(p) => <input {...p} className="control" type="email" autoComplete="email" dir="ltr" required />}
+          </Field>
         </div>
-        {errors.preferredContact ? <p className="error-text">{errors.preferredContact}</p> : null}
       </fieldset>
 
-      <div className="field field-consent" data-full="true">
+      <fieldset className="form-group">
+        <legend className="form-group-title">{f.groupProject}</legend>
+        <p className="form-group-hint">{f.groupProjectHint}</p>
+        <div className="form-grid">
+          <Field label={f.projectType} name="projectType" required error={errors.projectType}>
+            {(p) => (
+              <select {...p} className="control" defaultValue="" required>
+                <option value="" disabled>
+                  {f.choose}
+                </option>
+                {PROJECT_TYPES.map((k) => (
+                  <option key={k} value={k}>
+                    {f.projectTypes[k]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+
+          <Field label={f.projectLocation} name="projectLocation" required error={errors.projectLocation}>
+            {(p) => <input {...p} className="control" type="text" required />}
+          </Field>
+
+          <Field label={f.scopeOfWork} name="scopeOfWork" required error={errors.scopeOfWork} full>
+            {(p) => <input {...p} className="control" type="text" required />}
+          </Field>
+
+          <Field label={f.projectDescription} name="description" required error={errors.description} full>
+            {(p) => <textarea {...p} className="control" rows={6} required />}
+          </Field>
+        </div>
+      </fieldset>
+
+      <fieldset className="form-group">
+        <legend className="form-group-title">{f.groupTiming}</legend>
+        <p className="form-group-hint">{f.groupTimingHint}</p>
+        <div className="form-grid">
+          <Field label={f.startDate} name="startDate" error={errors.startDate}>
+            {(p) => (
+              <select {...p} className="control" defaultValue="unknown">
+                {START_WINDOWS.map((k) => (
+                  <option key={k} value={k}>
+                    {f.startWindows[k]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+
+          <Field label={f.duration} name="duration" error={errors.duration}>
+            {(p) => (
+              <select {...p} className="control" defaultValue="unknown">
+                {DURATIONS.map((k) => (
+                  <option key={k} value={k}>
+                    {f.durations[k]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+
+          <div className="field field-radios" data-full="true" role="group" aria-labelledby="preferred-contact-label">
+            <span className="field-radios-label" id="preferred-contact-label">
+              {f.preferredContact}
+            </span>
+            <div className="radio-row">
+              {CONTACT_METHODS.map((k, i) => (
+                <label key={k} className="radio-chip">
+                  <input type="radio" name="preferredContact" value={k} defaultChecked={i === 0} required />
+                  <span>{f.contactMethods[k]}</span>
+                </label>
+              ))}
+            </div>
+            {errors.preferredContact ? <p className="error-text">{errors.preferredContact}</p> : null}
+          </div>
+        </div>
+      </fieldset>
+
+      <div className="field field-consent">
         <label className="consent">
           <input type="checkbox" name="consent" value="yes" />
           <span>
@@ -147,12 +175,12 @@ export default function QuoteForm({ locale, t, whatsappBase }: { locale: Locale;
       </div>
 
       {state.phase === "error" ? (
-        <p className="form-error" role="alert" data-full="true">
+        <p className="form-error" role="alert">
           {state.message}
         </p>
       ) : null}
 
-      <div className="form-actions" data-full="true">
+      <div className="form-actions">
         <button type="submit" className="btn" disabled={state.phase === "sending"}>
           {state.phase === "sending" ? t.common.submitting : f.submitQuote}
         </button>

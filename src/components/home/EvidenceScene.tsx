@@ -110,7 +110,7 @@ export default function EvidenceScene({
     []
   );
 
-  const { at, goTo } = useStagedScene({ root, count: n, beat: 66, stage });
+  const { at, goTo } = useStagedScene({ root, count: n, beat: 40, stage });
 
   /**
    * The statutory register below the held sheet, drawn out row by row.
@@ -179,8 +179,6 @@ export default function EvidenceScene({
       data-chapter="3"
       aria-labelledby="evidence-title"
     >
-      <div className="blueprint-grid evidence-grid-bg" aria-hidden="true" />
-
       <div className="vscene-pin" data-pin="" hidden={n === 0}>
         <div className="page vscene-inner">
           <header className="vscene-head">

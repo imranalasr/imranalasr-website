@@ -30,7 +30,6 @@ export default function VerseBand({ locale }: { locale: Locale }) {
       data-surface-section="ink"
       aria-label={t.home.verseRef}
     >
-      <div className="blueprint-grid verse-grid" aria-hidden="true" />
       <div className="page verse-inner">
         <p className="verse-text" lang="ar" dir="rtl" data-reveal="fade">
           {t.home.verseText}
