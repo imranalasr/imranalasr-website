@@ -105,7 +105,10 @@ export default async function Footer({ locale }: { locale: Locale }) {
             © {year} {t.meta.siteName} — {t.footer.rights}
           </p>
           <p className="footer-domain">
-            {t.footer.domainNote} <span className="tabular">{c.futureDomain}</span>
+            {t.footer.domainNote}{" "}
+            <span className="tabular" dir="ltr">
+              {c.futureDomain}
+            </span>
           </p>
         </div>
       </div>
