@@ -10,7 +10,6 @@ import Cursor from "@/components/motion/Cursor";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLocale, localeMeta, locales, type Locale } from "@/i18n/config";
-import { company } from "@/content/company";
 import { siteUrl } from "@/lib/seo";
 
 const display = Readex_Pro({
@@ -59,6 +58,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     applicationName: t.meta.siteName,
     authors: [{ name: t.meta.siteName }],
     icons: { icon: "/brand/icon.png", apple: "/brand/icon.png" },
+    verification: process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : undefined,
     alternates: {
       canonical: `/${locale}`,
       languages: { ar: "/ar", en: "/en", "x-default": "/ar" },
@@ -91,31 +93,6 @@ export default async function LocaleLayout({
   const t = getDictionary(locale);
   const meta = localeMeta[locale];
 
-  const organisation = {
-    "@context": "https://schema.org",
-    "@type": "GeneralContractor",
-    name: company.name[locale],
-    alternateName: company.name[locale === "ar" ? "en" : "ar"],
-    url: `${siteUrl()}/${locale}`,
-    logo: `${siteUrl()}/brand/mark.png`,
-    email: company.contact.email,
-    telephone: company.contact.phonePrimary,
-    vatID: company.vatNumber,
-    identifier: [
-      { "@type": "PropertyValue", name: "Commercial Registration", value: company.commercialRegistration },
-      { "@type": "PropertyValue", name: "Unified National Number", value: company.unifiedNationalNumber },
-    ],
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: company.address.street[locale],
-      addressLocality: company.address.city[locale],
-      postalCode: company.address.postalCode,
-      addressCountry: company.address.countryCode,
-    },
-    areaServed: { "@type": "Country", name: company.address.country[locale] },
-    hasCredential: ["ISO 9001:2015", "ISO 14001:2015", "ISO 45001:2018"],
-  };
-
   return (
     <html
       lang={meta.htmlLang}
@@ -124,11 +101,6 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body>
-        <script
-          type="application/ld+json"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organisation) }}
-        />
         <MotionRoot />
         <Cursor />
         <Header locale={locale} t={t} />

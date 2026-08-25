@@ -1,60 +1,44 @@
-import Image from "next/image";
 import Link from "next/link";
-import { getDictionary } from "@/i18n/dictionaries";
 import { href, type Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionaries";
 import { company } from "@/content/company";
 import HeroScene from "./HeroScene";
-import { MarkGeometry, MarkOutline, MARK_BOX } from "@/components/brand/MarkGeometry";
+import HeroMark from "@/components/brand/HeroMark";
+import { MaskLine } from "@/components/MaskLines";
 import Magnetic from "@/components/motion/Magnetic";
+import Seq from "@/components/Seq";
+
+export type HeroStat = { key: string; n: number; label: string };
 
 /**
- * The mark, set out and then issued.
+ * First viewport.
  *
- * Stage one is the mark's own envelope — its exact silhouette, drawn as pure
- * line with the Kufic lettering not yet in it, inside a construction frame.
- * Stage two is the mark as issued: every letterform, at full fidelity, the
- * teal counters in place.
+ * A split, not a centred stack: the company states itself on the reading side
+ * — right in Arabic, left in English, which the logical grid handles on its
+ * own — and the object holds the other half. Three things have to land before
+ * anything else, so the column order is fixed: name, capability, action, with
+ * the proof strip directly beneath so the claim and the evidence for it are
+ * read together.
  *
- * Scrolling fills the lettering into the outline, so the page's promise —
- * «من المخطط إلى الإنجاز» — happens in the artwork rather than beside it.
- * The silhouette is the real one throughout; nothing is approximated.
+ * The object is the company's own mark, presented as issued: cast solid, set
+ * out on its own sheet, and standing still in a dark setting-out field of dot
+ * grid and engineering rules. No photograph and no pattern competes with it,
+ * because it is the brand itself — and here it is stated rather than
+ * demonstrated. Nothing in this viewport moves, is assembled, or can be taken
+ * hold of; the mark being erected piece by piece is the build section's own
+ * business, further down the page.
  */
-function ElevationDrawing() {
-  const { x0, y0, x1, y1 } = MARK_BOX;
-  const cx = (x0 + x1) / 2;
-
-  return (
-    <svg
-      viewBox="0 0 620 900"
-      fill="none"
-      aria-hidden="true"
-      className="h-full w-full"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      {/* Stage one — the envelope in its construction frame */}
-      <g data-sketch="">
-        <g stroke="currentColor" strokeWidth="0.9" vectorEffect="non-scaling-stroke" opacity="0.3">
-          <path d={`M${x0} ${y0} L${x1} ${y0} L${x1} ${y1} L${x0} ${y1} Z`} />
-          <path d={`M${cx} ${y0 - 34} L${cx} ${y1 + 34}`} />
-          <path d={`M${x0} ${y0 + (y1 - y0) / 3} L${x1} ${y0 + (y1 - y0) / 3}`} />
-          <path d={`M${x0} ${y0 + ((y1 - y0) * 2) / 3} L${x1} ${y0 + ((y1 - y0) * 2) / 3}`} />
-          <path d={`M${x0 - 40} ${y1 + 38} L${x1 + 40} ${y1 + 38}`} />
-          <path d={`M${x0} ${y1 + 30} L${x0} ${y1 + 46}`} />
-          <path d={`M${x1} ${y1 + 30} L${x1} ${y1 + 46}`} />
-        </g>
-        <MarkOutline stroke="currentColor" />
-      </g>
-
-      {/* Stage two — the mark as issued */}
-      <g data-mark="">
-        <MarkGeometry stroke="currentColor" accentStroke="var(--color-teal-300)" />
-      </g>
-    </svg>
-  );
-}
-
-export default function Hero({ locale }: { locale: Locale }) {
-  const t = getDictionary(locale);
+export default function Hero({
+  locale,
+  t,
+  stats,
+  statsLabel,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  stats: HeroStat[];
+  statsLabel: string;
+}) {
   const lines = t.home.heroTitleLines;
 
   const facts = [
@@ -64,65 +48,44 @@ export default function Hero({ locale }: { locale: Locale }) {
   ];
 
   return (
-    <HeroScene introKey="imran-hero-intro">
-      {/* Opening veil — carries the mark for the first beat, then lifts. */}
-      <div
-        data-hero-veil=""
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-[var(--color-ink)]"
-      >
-        <Image
-          data-hero-mark=""
-          src="/brand/mark.png"
-          alt=""
-          width={900}
-          height={1070}
-          priority
-          className="h-[clamp(190px,34vh,420px)] w-auto opacity-0"
-        />
-      </div>
-
-      <div className="hero-layers" aria-hidden="true">
-        <div data-hero-glow="" className="hero-glow" />
-        <div data-hero-grid="" data-depth="6" className="blueprint-grid hero-grid" />
-        <div data-hero-drawing="" data-depth="16" className="hero-drawing">
-          <ElevationDrawing />
-        </div>
+    <HeroScene>
+      <div className="hero-canvas" aria-hidden="true">
+        <span className="hero-dots" />
+        <span className="blueprint-grid hero-grid" />
+        <span className="hero-wash" />
       </div>
 
       <div className="page hero-inner">
-        <div data-hero-copy="" className="hero-copy">
+        <div className="hero-copy">
           {/* The opening formula, set at the head of the page as it is set at
               the head of a written work. */}
-          <p data-hero-fade="" className="basmala" lang="ar" dir="rtl">
+          <p className="basmala" lang="ar" dir="rtl" data-reveal="fade">
             {t.home.basmala}
           </p>
 
-          <p data-hero-fade="" className="eyebrow">
+          <h1 id="hero-title" className="eyebrow hero-eyebrow" data-reveal="up">
             {t.home.heroEyebrow}
-          </p>
-
-          <h1 className="hero-title">
-            {lines.map((line, i) => (
-              <span key={i} data-hero-line="" className="block overflow-hidden">
-                <span className="block">{line}</span>
-              </span>
-            ))}
-            <span data-hero-line="" className="block overflow-hidden">
-              <span className="hero-title-accent block">{t.home.heroSubtitle}</span>
-            </span>
           </h1>
 
-          <div data-hero-rule="" className="hero-rule" />
+          <p className="hero-title">
+            {lines.map((line, i) => (
+              <MaskLine key={i} delay={0.06 + i * 0.09}>
+                {line}
+              </MaskLine>
+            ))}
+            <MaskLine className="hero-title-accent" delay={0.06 + lines.length * 0.09}>
+              {t.home.heroSubtitle}
+            </MaskLine>
+          </p>
 
-          <p data-hero-fade="" className="hero-lead">
+          <p className="hero-lead" data-reveal="up">
             {t.home.heroLead}
           </p>
 
-          <div data-hero-fade="" className="hero-actions">
+          <div className="hero-actions" data-reveal="up">
             <Magnetic>
               <Link href={href("/quote", locale)} className="btn">
-                {t.common.requestQuote}
+                {t.home.heroPrimaryCta}
                 <span className="arrow" aria-hidden="true">
                   {locale === "ar" ? "←" : "→"}
                 </span>
@@ -130,14 +93,12 @@ export default function Hero({ locale }: { locale: Locale }) {
             </Magnetic>
             <Magnetic>
               <Link href={href("/projects", locale)} className="btn btn-ghost">
-                {t.common.viewAllProjects}
+                {t.home.heroSecondaryCta}
               </Link>
             </Magnetic>
           </div>
-        </div>
 
-        <div data-hero-meta="" className="hero-meta">
-          <dl className="hero-facts">
+          <dl className="hero-facts" data-reveal="up">
             {facts.map((f) => (
               <div key={f.k} className="hero-fact">
                 <dt>{f.k}</dt>
@@ -145,13 +106,45 @@ export default function Hero({ locale }: { locale: Locale }) {
               </div>
             ))}
           </dl>
-          <a href="#intro" className="hero-scroll" aria-label={t.common.scrollHint}>
-            <span>{t.common.scrollHint}</span>
-            <span className="hero-scroll-track" aria-hidden="true">
-              <span className="hero-scroll-thumb" />
-            </span>
-          </a>
         </div>
+
+        {/* The mark, stated: finished, still, and set out on its own sheet. */}
+        <div className="hero-stage" data-reveal="fade">
+          <HeroMark label={t.home.heroMarkAlt} className="hero-mark" />
+          <p className="hero-stage-cap">{t.home.heroMarkCaption}</p>
+        </div>
+      </div>
+
+      {/* Proof, immediately under the claim. Every figure is editable from the
+          dashboard and defaults to a count of the live content. */}
+      {stats.length > 0 && (
+        <div className="page hero-proof" data-reveal-group="">
+          <p className="eyebrow hero-proof-label" data-reveal="up">
+            {statsLabel}
+          </p>
+          <dl className="hero-proof-row">
+            {stats.map((s) => (
+              <div key={s.key} className="hero-proof-item" data-reveal="up">
+                <dt className="tabular hero-proof-n">
+                  <span data-count={s.n}>0</span>
+                </dt>
+                <dd className="hero-proof-label-text">{s.label}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
+      {/* The way out of the cover. A cue that names where it goes: the page is
+          five chapters long and this is the door to the first of them, so it
+          says so rather than pointing at nothing in particular. */}
+      <div className="page hero-cue" data-reveal="fade">
+        <span className="hero-cue-rule" aria-hidden="true" />
+        <span className="hero-cue-text">{t.home.heroScrollCue}</span>
+        <span className="hero-cue-next">
+          <Seq n={1} of={t.home.chapters.length} />
+          <span className="hero-cue-label">{t.home.chapters[0].label}</span>
+        </span>
       </div>
     </HeroScene>
   );

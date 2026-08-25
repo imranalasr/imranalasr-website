@@ -17,7 +17,7 @@ export default function PageHero({
   aside?: React.ReactNode;
 }) {
   return (
-    <section className="page-hero" data-surface="ink" data-surface-section="ink">
+    <section className="page-hero" data-surface="forest" data-surface-section="forest">
       <div className="blueprint-grid page-hero-grid" aria-hidden="true" />
       <div className="page page-hero-inner">
         <p className="eyebrow" data-reveal="fade">

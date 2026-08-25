@@ -45,6 +45,30 @@ export const MARK_ACCENT_PATHS: string[] = [
   "M244.91 780.45 L226.20 780.20 L226.45 761.00 L245.16 761.25 Z",
 ];
 
+/* ============================================================
+   THE TWO PARTS
+
+   The artwork reads as two masses: the first traced path is the
+   tall upright form, and everything below it is the Kufic
+   letterform block. The teal counter at the top sits inside the
+   upright; the one at the bottom sits inside the block. Nothing
+   here is invented; the split is read straight off the mark.
+
+   It exists so the mark can be *cast* in two pieces — that is what
+   gives the hero object its depth. It is not a construction kit:
+   no part of the logo ever plays the crane. The build section
+   below the hero brings its own crane, external to the mark, and
+   the crane leaves when the work is done.
+   ============================================================ */
+
+/** The upright form — and its counter. */
+export const MARK_ARM_PATHS: string[] = [MARK_PATHS[0]];
+export const MARK_ARM_ACCENT_PATHS: string[] = [MARK_ACCENT_PATHS[0]];
+
+/** The letterform block beneath it — and its counter. */
+export const MARK_BODY_PATHS: string[] = MARK_PATHS.slice(1);
+export const MARK_BODY_ACCENT_PATHS: string[] = [MARK_ACCENT_PATHS[1]];
+
 /** Bounding box of the mark inside the 620×900 frame. */
 export const MARK_BOX = { x0: 0, y0: 82, x1: 452, y1: 818 } as const;
 

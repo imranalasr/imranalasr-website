@@ -1,332 +1,113 @@
-"use client";
-
-import { useEffect, useMemo, useRef } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import ProjectLink from "@/components/ProjectLink";
-import { href, type Locale } from "@/i18n/config";
+import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Project, ShowcaseTile } from "@/content/projects";
+import type { Service } from "@/content/services";
+import ProjectShowcase, {
+  type ArchiveTile,
+  type ShowcaseProject,
+} from "./ProjectShowcase";
 
 /**
- * The projects sequence — the spine of the whole page.
+ * The projects section, shaped on the server.
  *
- * The composition is a true geometric spiral: thirty photographs are set out
- * on an Archimedean arm, r = r0 + k·θ, at a constant angular step, so the
- * frames step outward at an even rate and the eye is carried around the
- * centre rather than scattered at random. Each frame is scaled by its radius,
- * so the arm also reads as depth.
+ * The scene itself is a client component, so everything it needs is resolved
+ * and localised here rather than shipped as a dictionary and a set of
+ * bilingual records for the browser to pick through. What crosses the
+ * boundary is exactly what is drawn: five projects, already in the reader's
+ * language, and a flat list of archive photographs.
  *
- * Scrolling drives three beats:
- *   1. the arm UNWINDS — every frame flies in along the spiral from further
- *      round the curve, so the whole set coils inward together;
- *   2. it BREATHES — depth bands separate at different rates;
- *   3. it COLLAPSES — the frames spin back into the centre and the ordered,
- *      clickable project index rises through them.
- *
- * The scattered layer is decorative and hidden from assistive technology; the
- * index below it is the real, always-present content.
+ * Nothing is asserted that the content files do not carry. The field a
+ * project sits in is read from its own related-services link rather than
+ * stated separately, and the scope lines come from each project's
+ * `documented` list — what its photographs actually show — so the scene never
+ * claims more than the site can evidence. No client names, no contract
+ * values, no completion percentages, because no supplied document holds any.
  */
-
-/** How many photographs from each project join the spiral. */
-const PER_PROJECT = 6;
-
-type Slot = {
-  /** centre position, % of stage */
-  x: number;
-  y: number;
-  /** width, % of stage */
-  w: number;
-  rot: number;
-  /** 1 = innermost band … 4 = outermost */
-  depth: number;
-  /** polar coordinates, kept so the entry can travel along the arm */
-  theta: number;
-  r: number;
-};
 
 /**
- * Archimedean spiral, stretched horizontally to suit a wide stage.
- * A constant angular step keeps the arm legible; the radius grows on a gentle
- * curve so the inner turns stay tight and the outer ones open up.
+ * How many photographs the archive is built from.
+ *
+ * Enough that it reads as more record than anyone could take in — which is
+ * what the heading says — and few enough to stay a composition rather than a
+ * wall. It is only ever rendered on a viewport wide enough to stage it, so
+ * this is not weight a phone is asked to carry.
  */
-const STEP = 0.435; // radians between frames — ~2 full turns across 30 frames
-const START = -2.1;
-/** Slightly flattened: the arm has to sit above the project index. */
-const SX = 1.3;
-const SY = 0.84;
-const CY = 38;
-
-/** Polar → stage percentage, used by both the resting arm and its entry path. */
-function place(theta: number, r: number) {
-  return { x: 50 + r * Math.cos(theta) * SX, y: CY + r * Math.sin(theta) * SY };
-}
-
-function spiral(count: number): Slot[] {
-  return Array.from({ length: count }, (_, i) => {
-    const t = i / Math.max(1, count - 1);
-    const theta = START + i * STEP;
-    const r = 9 + 31 * Math.pow(t, 0.82);
-    const { x, y } = place(theta, r);
-    return {
-      x,
-      y,
-      w: 5.2 + 8.4 * t,
-      rot: Math.sin(theta) * 7 - 2,
-      depth: 1 + Math.min(3, Math.floor(t * 4)),
-      theta,
-      r,
-    };
-  });
-}
+const ARCHIVE_MAX = 16;
 
 export default function ProjectsScene({
   locale,
   t,
   projects,
+  services,
   showcase,
 }: {
   locale: Locale;
   t: Dictionary;
   projects: Project[];
-  /** Chosen in the dashboard; null means compose the scene automatically. */
+  services: Service[];
+  /** Chosen in the dashboard; picks override a project's own cover. */
   showcase?: ShowcaseTile[] | null;
 }) {
-  const root = useRef<HTMLElement>(null);
+  if (!projects.length) return null;
 
-  /**
-   * Interleave the projects so neighbouring frames on the arm come from
-   * different sites — the composition reads as one body of work, and every
-   * photograph still sits under the project it belongs to.
-   */
-  const tiles = useMemo(() => {
-    if (showcase?.length) {
-      // A curated selection arrives already interleaved and already checked
-      // against the published galleries.
-      return showcase.flatMap((tile) => {
-        const project = projects.find((p) => p.slug === tile.slug);
-        return project ? [{ img: { src: tile.src, w: tile.w, h: tile.h, blur: tile.blur }, project }] : [];
-      });
-    }
-    const picks = projects.map((p) => {
-      const g = p.gallery.length ? p.gallery : [p.cover];
-      const step = Math.max(1, Math.floor(g.length / PER_PROJECT));
-      return Array.from({ length: PER_PROJECT }, (_, k) => g[Math.min(g.length - 1, k * step)]);
-    });
-    const out: { img: { src: string; w: number; h: number; blur: string }; project: Project }[] = [];
-    for (let k = 0; k < PER_PROJECT; k++) {
-      projects.forEach((p, pi) => out.push({ img: picks[pi][k], project: p }));
-    }
-    return out;
-  }, [projects, showcase]);
+  /* A dashboard pick stands in for the delivered cover, first pick wins. */
+  const picked = new Map<string, ShowcaseTile>();
+  for (const tile of showcase ?? []) if (!picked.has(tile.slug)) picked.set(tile.slug, tile);
 
-  const slots = useMemo(() => spiral(tiles.length), [tiles.length]);
-
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    if (document.documentElement.classList.contains("reduced-motion")) {
-      el.dataset.static = "true";
-      return;
-    }
-    if (window.matchMedia("(max-width: 767px)").matches) {
-      el.dataset.static = "true";
-      return;
-    }
-
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      const stage = el.querySelector<HTMLElement>("[data-stage]")!;
-      const frames = gsap.utils.toArray<HTMLElement>("[data-tile]");
-      const cards = gsap.utils.toArray<HTMLElement>("[data-project-card]");
-
-      gsap.set(cards, { opacity: 0, yPercent: 12 });
-
-      /** Where a frame starts: further round the same arm, further out. */
-      const entry = (i: number) => {
-        const s = slots[i];
-        const from = place(s.theta + 1.6, s.r * 2.6 + 30);
-        return { dx: (from.x - s.x) / 100, dy: (from.y - s.y) / 100 };
-      };
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: el,
-          start: "top top",
-          end: "+=470%",
-          scrub: 0.8,
-          pin: "[data-stage]",
-          pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      /* 1 — the arm unwinds: each frame travels in along the spiral */
-      frames.forEach((frame, i) => {
-        const s = slots[i];
-        tl.fromTo(
-          frame,
-          {
-            x: () => entry(i).dx * stage.offsetWidth,
-            y: () => entry(i).dy * stage.offsetHeight,
-            rotate: s.rot + 34,
-            scale: 0.42,
-            opacity: 0,
-          },
-          {
-            x: 0,
-            y: 0,
-            rotate: s.rot,
-            scale: 1,
-            opacity: 1,
-            ease: "power2.out",
-            duration: 1.15,
-          },
-          i * 0.035
-        );
-      });
-
-      /* 2 — the arm breathes: depth bands drift apart */
-      frames.forEach((frame, i) => {
-        tl.to(frame, { y: `-=${slots[i].depth * 14}`, ease: "none", duration: 1.5 }, 1.4);
-      });
-
-      /* 3 — the label under the pinned title changes with the scene */
-      tl.to("[data-scene-label='compose']", { opacity: 0, y: -12, duration: 0.3 }, 2.5)
-        .fromTo("[data-scene-label='index']", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4 }, 2.7);
-
-      /* 4 — the spiral winds back into the centre, the index rises through it */
-      frames.forEach((frame, i) => {
-        const s = slots[i];
-        tl.to(
-          frame,
-          {
-            x: () => -((s.x - 50) / 100) * stage.offsetWidth * 0.72,
-            y: () => -((s.y - CY) / 100) * stage.offsetHeight * 0.72,
-            rotate: s.rot - 46,
-            scale: 0.3,
-            opacity: 0,
-            filter: "blur(7px)",
-            ease: "power2.in",
-            duration: 0.95,
-          },
-          2.5 + (frames.length - i) * 0.014
-        );
-      });
-
-      /* The index only rises once the arm has wound itself out of the way. */
-      tl.to(cards, { opacity: 1, yPercent: 0, ease: "expo.out", duration: 1, stagger: 0.09 }, 3.35);
-
-      /* progress rail */
-      tl.fromTo("[data-scene-rail]", { scaleX: 0 }, { scaleX: 1, ease: "none", duration: tl.duration() }, 0);
-    }, el);
-
-    return () => ctx.revert();
-  }, [slots, tiles.length]);
+  const shaped: ShowcaseProject[] = projects.map((p) => {
+    const pick = picked.get(p.slug);
+    const cover = pick
+      ? { src: pick.src, w: pick.w, h: pick.h, blur: pick.blur, alt: p.cover.alt[locale] }
+      : { ...p.cover, alt: p.cover.alt[locale] };
+    return {
+      slug: p.slug,
+      title: p.title[locale],
+      location: p.location[locale],
+      summary: p.summary[locale],
+      sector: services.find((s) => s.slug === p.relatedServices[0])?.title[locale] ?? null,
+      documented: p.documented[locale],
+      cover,
+    };
+  });
 
   return (
-    <section
-      ref={root}
-      className="projects-scene"
-      data-surface="ink"
-      data-surface-section="ink"
-      aria-labelledby="projects-scene-title"
-    >
-      <div data-stage="" className="ps-stage">
-        <div className="ps-scatter" aria-hidden="true">
-          {tiles.map((tile, i) => {
-            const s = slots[i];
-            return (
-              /* The anchor owns the centring translate; GSAP owns the frame's
-                 transform. Keeping them on separate elements matters: GSAP
-                 normalises the `translate` property to `none` on anything it
-                 animates, which would silently drop the offset. */
-              <span
-                key={`${tile.project.slug}-${i}`}
-                className="ps-anchor"
-                style={{ insetInlineStart: `${s.x}%`, top: `${s.y}%`, width: `${s.w}%`, zIndex: s.depth }}
-              >
-                <figure data-tile="" data-depth={s.depth} className="ps-tile" style={{ opacity: 0 }}>
-                  <Image
-                    src={tile.img.src}
-                    alt=""
-                    width={tile.img.w}
-                    height={tile.img.h}
-                    sizes="22vw"
-                    placeholder="blur"
-                    blurDataURL={tile.img.blur}
-                    className="ps-tile-img"
-                  />
-                  <figcaption className="ps-tile-cap tabular">{tile.project.location[locale]}</figcaption>
-                </figure>
-              </span>
-            );
-          })}
-        </div>
-
-        <div className="page ps-head">
-          <p className="eyebrow">{t.home.projectsEyebrow}</p>
-          <h2 id="projects-scene-title" className="ps-title">
-            {t.home.projectsTitle}
-          </h2>
-          <div className="ps-labels">
-            <span data-scene-label="compose">{t.home.projectsLead}</span>
-            <span data-scene-label="index" className="ps-label-index">
-              {t.home.projectsIndexLabel} · <span className="tabular">{projects.length}</span>
-            </span>
-          </div>
-          <span className="ps-rail" aria-hidden="true">
-            <span data-scene-rail="" className="ps-rail-fill" />
-          </span>
-        </div>
-
-        <div className="page ps-grid" data-project-grid="">
-          {projects.map((p, i) => (
-            <article key={p.slug} data-project-card="" className="ps-card">
-              <ProjectLink href={href(`/projects/${p.slug}`, locale)} className="ps-card-link">
-                <span className="figure figure-zoom ps-card-figure">
-                  <Image
-                    src={p.cover.src}
-                    alt={p.cover.alt[locale]}
-                    width={p.cover.w}
-                    height={p.cover.h}
-                    sizes="(max-width: 767px) 92vw, (max-width: 1200px) 46vw, 30vw"
-                    placeholder="blur"
-                    blurDataURL={p.cover.blur}
-                    style={{ viewTransitionName: `project-${p.slug}` }}
-                  />
-                </span>
-                <span className="ps-card-meta">
-                  <span className="tabular ps-card-index">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="ps-card-loc tabular">{p.location[locale]}</span>
-                </span>
-                <h3 className="ps-card-title">{p.title[locale]}</h3>
-                <span className="ps-card-cta">
-                  {t.common.viewProject}
-                  <span aria-hidden="true">{locale === "ar" ? "←" : "→"}</span>
-                </span>
-              </ProjectLink>
-            </article>
-          ))}
-        </div>
-
-        <div className="page ps-foot">
-          <Link href={href("/projects", locale)} className="btn btn-ghost">
-            {t.common.viewAllProjects}
-          </Link>
-          {/* What is shown is a selection; the rest lives in the profile. */}
-          <p className="ps-more">
-            {t.home.projectsMore}{" "}
-            <Link href={href("/profile-request", locale)} className="link-sweep ps-more-cta">
-              {t.home.projectsMoreCta}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </section>
+    <ProjectShowcase
+      locale={locale}
+      t={t}
+      projects={shaped}
+      archive={buildArchive(projects, showcase)}
+    />
   );
+}
+
+/**
+ * The archive pool.
+ *
+ * Dashboard picks win outright when there are any — they are a deliberate
+ * choice of what the company wants shown. Otherwise the pool is taken round
+ * the projects rather than down them, one photograph from each in turn, so
+ * no single site can dominate the field however many photographs it happens
+ * to have on file.
+ */
+function buildArchive(projects: Project[], showcase: ShowcaseTile[] | null | undefined): ArchiveTile[] {
+  const known = new Set(projects.map((p) => p.slug));
+
+  if (showcase?.length) {
+    return showcase
+      .filter((tile) => known.has(tile.slug))
+      .slice(0, ARCHIVE_MAX)
+      .map((tile) => ({ src: tile.src, w: tile.w, h: tile.h, blur: tile.blur, slug: tile.slug }));
+  }
+
+  const out: ArchiveTile[] = [];
+  const deepest = Math.max(...projects.map((p) => p.gallery.length));
+  for (let i = 0; i < deepest && out.length < ARCHIVE_MAX; i++) {
+    for (const project of projects) {
+      if (out.length >= ARCHIVE_MAX) break;
+      const image = project.gallery[i];
+      if (!image) continue;
+      out.push({ src: image.src, w: image.w, h: image.h, blur: image.blur, slug: project.slug });
+    }
+  }
+  return out;
 }

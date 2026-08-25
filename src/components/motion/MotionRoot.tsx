@@ -17,6 +17,20 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 let registered = false;
 
+/**
+ * How far above a jump target to stop.
+ *
+ * Read off the masthead itself rather than guessed at: it is fixed, it has
+ * three heights depending on where the reader is, and a hard-coded offset is
+ * wrong in at least one of them — which is how a section heading ends up
+ * underneath it. Falls back to the token's own floor if the header is not on
+ * the page at all.
+ */
+function headerClearance() {
+  const header = document.querySelector<HTMLElement>(".site-header");
+  return (header?.offsetHeight ?? 104) + 16;
+}
+
 export default function MotionRoot() {
   const pathname = usePathname();
 
@@ -62,7 +76,7 @@ export default function MotionRoot() {
       const target = id && document.getElementById(id);
       if (!target) return;
       e.preventDefault();
-      lenis.scrollTo(target, { offset: -88 });
+      lenis.scrollTo(target, { offset: -headerClearance() });
     };
     document.addEventListener("click", onAnchor);
 

@@ -37,7 +37,8 @@ npm start                # http://localhost:3000
 | المتغير | الوظيفة |
 |---|---|
 | `AUTH_SECRET` | توقيع جلسات الإدارة — **إلزامي**، ولا يُشارك |
-| `NEXT_PUBLIC_SITE_URL` | أصل الموقع (canonical/sitemap/OG) |
+| `NEXT_PUBLIC_SITE_URL` | عنوان النشر الرسمي؛ يجب أن يكون `https://imranalasr.sa` في الإنتاج |
+| `GOOGLE_SITE_VERIFICATION` | رمز تحقق Google Search Console الاختياري؛ اتركه فارغًا حتى يصدر من Google |
 | `DB_DRIVER` | `sqlite` (افتراضي) أو `supabase` |
 | `RESEND_API_KEY` | مفتاح Resend للبريد — اختياري؛ بدونه تُحفظ الطلبات وتظهر في اللوحة ويُسجَّل الإشعار في سجل الخادم بدل إرساله |
 | `MAIL_TO` | صندوق استقبال الإشعارات (الافتراضي requests@imranalasr.sa) |

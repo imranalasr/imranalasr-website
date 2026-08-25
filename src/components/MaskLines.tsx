@@ -8,6 +8,7 @@ import type { ElementType, ReactNode } from "react";
 export function MaskLines({
   lines,
   as: Tag = "h2",
+  id,
   className,
   lineClassName,
   delayStep = 0.09,
@@ -15,13 +16,14 @@ export function MaskLines({
 }: {
   lines: readonly string[];
   as?: ElementType;
+  id?: string;
   className?: string;
   lineClassName?: string;
   delayStep?: number;
   startDelay?: number;
 }) {
   return (
-    <Tag className={className}>
+    <Tag id={id} className={className}>
       {lines.map((line, i) => (
         <span key={i} data-mask-line="" data-delay={startDelay + i * delayStep} className={lineClassName}>
           <span>{line}</span>

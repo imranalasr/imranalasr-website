@@ -46,8 +46,16 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    // "/" and unauthenticated "/admin" are handled in middleware.ts.
-    return [];
+    // Keep every public URL on the apex production hostname. Locale routing
+    // and unauthenticated admin access remain handled in middleware.ts.
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.imranalasr.sa" }],
+        destination: "https://imranalasr.sa/:path*",
+        permanent: true,
+      },
+    ];
   },
 };
 

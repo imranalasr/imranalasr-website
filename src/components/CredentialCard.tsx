@@ -21,6 +21,9 @@ export default function CredentialCard({
   return (
     <article className="cred-card card" data-reveal="up" data-kind={c.kind}>
       <header className="cred-head">
+        {/* The index is drawn by the grid's own counter — a card does not
+            know its position, and hand-numbering them would go stale the
+            moment one is unpublished from the dashboard. */}
         <p className="tabular cred-code">{c.code[locale]}</p>
         <h3 className="cred-title">{c.title[locale]}</h3>
       </header>

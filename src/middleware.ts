@@ -10,6 +10,13 @@ import { NextResponse, type NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (request.nextUrl.hostname === "www.imranalasr.sa") {
+    const url = request.nextUrl.clone();
+    url.protocol = "https";
+    url.hostname = "imranalasr.sa";
+    return NextResponse.redirect(url, 308);
+  }
+
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const hasSession = request.cookies.has("imran_admin");
     if (!hasSession) {
@@ -31,7 +38,7 @@ export function middleware(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone();
     url.pathname = `/ar${pathname === "/" ? "" : pathname}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, 308);
   }
 
   return NextResponse.next();
@@ -40,5 +47,5 @@ export function middleware(request: NextRequest) {
 export const config = {
   // Skip Next internals and anything with a file extension (public assets:
   // /brand/*.png, /projects/**/*.webp, /og.png, /robots.txt, /sitemap.xml …).
-  matcher: ["/((?!_next/static|_next/image|.*\\..*).*)"],
+  matcher: ["/((?!_next/static|_next/image|.*\\..*).*)", "/robots.txt", "/sitemap.xml"],
 };

@@ -1,40 +1,141 @@
-import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import { notFound } from "next/navigation";
 import Hero from "@/components/home/Hero";
-import ServicesScene from "@/components/home/ServicesScene";
+import ChapterRail from "@/components/home/ChapterRail";
+import Marquee from "@/components/home/Marquee";
+import BuildSequence from "@/components/home/BuildSequence";
+import Capability from "@/components/home/Capability";
 import ProjectsScene from "@/components/home/ProjectsScene";
+import Evidence from "@/components/home/Evidence";
+import ServicesScene from "@/components/home/ServicesScene";
 import VerseBand from "@/components/home/VerseBand";
-import CredentialCard from "@/components/CredentialCard";
 import { MaskLines } from "@/components/MaskLines";
 import Magnetic from "@/components/motion/Magnetic";
 import { getDictionary } from "@/i18n/dictionaries";
 import { href, isLocale, type Locale } from "@/i18n/config";
-import { resolveCredentials, resolveHome, resolveProjects, resolveServices } from "@/lib/content";
+import {
+  resolveCompany,
+  resolveCredentials,
+  resolveHome,
+  resolveProjects,
+  resolveServices,
+} from "@/lib/content";
 import { totalRegisteredActivities } from "@/content/services";
-import { notFound } from "next/navigation";
+import { pageMetadata, serializeJsonLd, siteUrl } from "@/lib/seo";
 
 export const revalidate = 300;
 
+const HOME_SEO = {
+  ar: {
+    title: "عمران العصر الحديثة للمقاولات | Imran Al Asr",
+    description:
+      "عمران العصر الحديثة للمقاولات شركة مقاولات سعودية تقدم أعمال الإنشاء والبنية التحتية والترميم والتشطيب وأعمال الكهرباء والطاقة في المملكة العربية السعودية.",
+  },
+  en: {
+    title: "Imran Al Asr Modern Construction | عمران العصر الحديثة للمقاولات",
+    description:
+      "Imran Al Asr is a construction company delivering building, infrastructure, restoration, finishing, electrical and power works across Saudi Arabia.",
+  },
+} as const;
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const seo = HOME_SEO[locale];
+  return {
+    ...pageMetadata({ locale, path: "/", title: seo.title, description: seo.description }),
+    title: { absolute: seo.title },
+  };
+}
+
+/**
+ * Home.
+ *
+ * The page is ordered the way a contractor is actually assessed: what they
+ * build and how to start (hero), how they run a job (the build sequence, which
+ * is the contract process), what they claim (capability), what they have
+ * already delivered (projects), what can be verified (evidence), what can be
+ * bought (solutions), and then the way in (contact).
+ *
+ * Proof comes before persuasion throughout: the figures sit inside the first
+ * viewport, the project cards carry documented scope rather than adjectives,
+ * and the credentials block prints certificate numbers instead of badges.
+ */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale = raw as Locale;
   const t = getDictionary(locale);
 
-  const [projects, services, credentials] = await Promise.all([
+  const [projects, services, credentials, company] = await Promise.all([
     resolveProjects(),
     resolveServices(),
     resolveCredentials(),
+    resolveCompany(),
   ]);
 
   const regions = Array.from(new Set(projects.map((p) => p.location[locale])));
 
-  // The opening photograph, the documented figures and the projects scene are
-  // all editable from the dashboard; each falls back to the delivered content.
+  // The supporting photograph, the documented figures and the project
+  // photography are all editable from the dashboard; each falls back to the
+  // delivered content.
   const home = await resolveHome(projects);
-  const figureProject = home.figure?.project ?? projects[0];
-  const figure = home.figure?.image ?? figureProject?.coverPortrait;
+
+  const base = siteUrl();
+  const seo = HOME_SEO[locale];
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${base}/#website`,
+        url: `${base}/`,
+        name: "عمران العصر الحديثة",
+        alternateName: ["شركة عمران العصر الحديثة للمقاولات", "Imran Al Asr", "imranalasr.sa"],
+        inLanguage: ["ar-SA", "en"],
+        publisher: { "@id": `${base}/#organization` },
+      },
+      {
+        "@type": "GeneralContractor",
+        "@id": `${base}/#organization`,
+        name: company.name.ar,
+        alternateName: [company.shortName.ar, "Imran Al Asr", company.name.en],
+        url: `${base}/`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${base}/brand/icon.png`,
+          contentUrl: `${base}/brand/icon.png`,
+          width: 256,
+          height: 256,
+        },
+        description: seo.description,
+        email: company.contact.email,
+        telephone: company.contact.phonePrimary,
+        vatID: company.vatNumber,
+        identifier: [
+          {
+            "@type": "PropertyValue",
+            name: "Commercial Registration",
+            value: company.commercialRegistration,
+          },
+          {
+            "@type": "PropertyValue",
+            name: "Unified National Number",
+            value: company.unifiedNationalNumber,
+          },
+        ],
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: `${company.address.street[locale]}، ${company.address.district[locale]}`,
+          addressLocality: company.address.city[locale],
+          postalCode: company.address.postalCode,
+          addressCountry: company.address.countryCode,
+        },
+        areaServed: { "@type": "Country", name: company.address.country[locale] },
+      },
+    ],
+  };
 
   const counted: Record<string, number> = {
     activities: totalRegisteredActivities,
@@ -50,122 +151,59 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       label: item.label?.[locale]?.trim() || t.home.stats[item.key],
     }));
   const statsLabel = home.stats.label?.[locale]?.trim() || t.home.statsLabel;
+  const arrow = locale === "ar" ? "←" : "→";
 
   return (
     <>
-      <Hero locale={locale} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
+      />
+      {/* The running head: which of the five chapters below is being read.
+          It reports only — every chapter it lists is reached by scrolling and
+          is in the site navigation as well. */}
+      <ChapterRail t={t} />
 
-      {/* ── Intro: the hero's grid resolves into a stated position ─────── */}
-      <section id="intro" className="section intro-section" data-surface-section="light">
-        <div className="page intro-grid">
-          <div className="intro-copy">
-            <p className="eyebrow" data-reveal="up">
-              {t.home.introEyebrow}
-            </p>
-            <MaskLines
-              as="h2"
-              className="section-title intro-title"
-              lines={t.home.introTitle.split(" ").length > 4 ? [t.home.introTitle] : [t.home.introTitle]}
-            />
-            <p className="intro-body" data-reveal="up">
-              {t.home.introBody}
-            </p>
-            <div data-reveal="up">
-              <Magnetic>
-                <Link href={href("/about", locale)} className="btn btn-ghost">
-                  {t.nav.about}
-                  <span className="arrow" aria-hidden="true">
-                    {locale === "ar" ? "←" : "→"}
-                  </span>
-                </Link>
-              </Magnetic>
-            </div>
-          </div>
+      <Hero locale={locale} t={t} stats={stats} statsLabel={statsLabel} />
 
-          <div className="intro-figure" data-parallax-scope="">
-            <span className="figure intro-figure-frame">
-              <span
-                data-parallax="-40"
-                className="intro-figure-inner"
-                style={{ "--figure-pos": home.figure?.position ?? "50% 50%" } as CSSProperties}
-              >
-                <Image
-                  src={figure.src}
-                  alt={figure.alt[locale]}
-                  width={figure.w}
-                  height={figure.h}
-                  priority
-                  sizes="(max-width: 900px) 90vw, 38vw"
-                  placeholder="blur"
-                  blurDataURL={figure.blur}
-                />
-              </span>
-            </span>
-            <p className="intro-figure-cap tabular">
-              {figureProject.title[locale]} · {figureProject.location[locale]}
-            </p>
-          </div>
-        </div>
-
-        {/* Hiding every figure in the dashboard removes the strip rather than
-            leaving an empty rule across the page. */}
-        {stats.length > 0 && (
-          <div className="page stats-strip" data-reveal-group="">
-            <p className="stats-label eyebrow" data-reveal="up">
-              {statsLabel}
-            </p>
-            <dl className="stats-row">
-              {stats.map((s) => (
-                <div key={s.key} className="stat" data-reveal="up">
-                  <dt className="tabular stat-n">
-                    <span data-count={s.n}>0</span>
-                  </dt>
-                  <dd className="stat-label">{s.label}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
-      </section>
-
+      {/* The verse the company is named after, read immediately after the
+          mark and before anything is claimed or sold. It is the foundation
+          the name stands on, so it belongs at the foot of the cover — not
+          at the foot of the page, where it had become decoration. It stays
+          on the cover's own dark ground for the same reason: it is part of
+          the opening, not an interruption between two sales sections. */}
       <VerseBand locale={locale} />
+
+      <Marquee t={t} regions={regions} activities={totalRegisteredActivities} />
+
+      <BuildSequence t={t} />
+
+      <Capability locale={locale} t={t} figure={home.figure} />
+
+      <ProjectsScene
+        locale={locale}
+        t={t}
+        projects={projects}
+        services={services}
+        showcase={home.showcase}
+      />
+
+      <Evidence locale={locale} t={t} credentials={credentials} />
 
       <ServicesScene locale={locale} t={t} services={services} />
 
-      <ProjectsScene locale={locale} t={t} projects={projects} showcase={home.showcase} />
-
-      {/* ── Credentials ────────────────────────────────────────────────── */}
-      <section className="section quality-strip" data-surface="paper-deep" data-surface-section="light">
-        <div className="page">
-          <div className="section-head">
-            <p className="eyebrow" data-reveal="up">
-              {t.home.qualityEyebrow}
-            </p>
-            <MaskLines as="h2" className="section-title" lines={[t.home.qualityTitle]} />
-            <p className="section-lead" data-reveal="up">
-              {t.home.qualityLead}
-            </p>
-          </div>
-          <div className="cred-grid" data-reveal-group="">
-            {credentials.slice(0, 3).map((c) => (
-              <CredentialCard key={c.id} credential={c} locale={locale} t={t} />
-            ))}
-          </div>
-          <div className="section-foot" data-reveal="up">
-            <Link href={href("/quality", locale)} className="btn btn-ghost">
-              {t.nav.quality}
-              <span className="arrow" aria-hidden="true">
-                {locale === "ar" ? "←" : "→"}
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Closing call ───────────────────────────────────────────────── */}
-      <section className="section cta-section" data-surface="teal" data-surface-section="teal">
+      {/* ── The way in ─────────────────────────────────────────────────── */}
+      <section
+        className="section cta-section"
+        data-surface="forest"
+        data-surface-section="forest"
+        data-seam="paper"
+      >
         <div className="blueprint-grid cta-grid" aria-hidden="true" />
         <div className="page cta-inner">
+          <p className="eyebrow" data-reveal="up">
+            {t.home.ctaEyebrow}
+          </p>
           <MaskLines as="h2" className="cta-title" lines={[t.home.ctaTitle]} />
           <p className="cta-lead" data-reveal="up">
             {t.home.ctaLead}
@@ -173,18 +211,27 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="cta-actions" data-reveal="up">
             <Magnetic>
               <Link href={href("/quote", locale)} className="btn">
-                {t.common.requestQuote}
+                {t.home.heroPrimaryCta}
                 <span className="arrow" aria-hidden="true">
-                  {locale === "ar" ? "←" : "→"}
+                  {arrow}
                 </span>
               </Link>
             </Magnetic>
             <Magnetic>
-              <Link href={href("/contact", locale)} className="btn btn-ghost">
-                {t.common.getInTouch}
+              <Link href={href("/profile-request", locale)} className="btn btn-ghost">
+                {t.common.requestProfile}
               </Link>
             </Magnetic>
           </div>
+          <p className="cta-direct" data-reveal="up">
+            <span className="cta-direct-label">{t.home.ctaDirect}</span>
+            <a href={`tel:${company.contact.phonePrimary}`} className="bracket link-bracket tabular">
+              {company.contact.phonePrimaryDisplay}
+            </a>
+            <a href={`mailto:${company.contact.email}`} className="bracket link-bracket">
+              {company.contact.email}
+            </a>
+          </p>
         </div>
       </section>
     </>

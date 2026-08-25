@@ -6,7 +6,7 @@ import PageHero from "@/components/PageHero";
 import ProjectLink from "@/components/ProjectLink";
 import { getDictionary } from "@/i18n/dictionaries";
 import { href, isLocale, locales, type Locale } from "@/i18n/config";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, serializeJsonLd } from "@/lib/seo";
 import { resolveProjects } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
@@ -42,7 +42,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(itemList) }} />
 
       <PageHero eyebrow={t.projects.eyebrow} title={t.projects.title} lead={t.projects.lead} />
 

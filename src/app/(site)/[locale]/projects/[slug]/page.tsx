@@ -7,7 +7,7 @@ import ProjectLink from "@/components/ProjectLink";
 import { MaskLines } from "@/components/MaskLines";
 import { getDictionary } from "@/i18n/dictionaries";
 import { href, isLocale, locales, type Locale } from "@/i18n/config";
-import { pageMetadata, siteUrl } from "@/lib/seo";
+import { pageMetadata, serializeJsonLd, siteUrl } from "@/lib/seo";
 import { resolveProjects } from "@/lib/content";
 import { services as allServices } from "@/content/services";
 
@@ -72,7 +72,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ loca
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
       {/* Immersive cover — the picture arrives from the index via a shared
           view transition where the browser supports one. */}

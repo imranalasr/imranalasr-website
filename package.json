@@ -7,7 +7,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "db:init": "node --experimental-sqlite scripts/db-init.mjs",
     "admin:create": "node --experimental-sqlite scripts/create-admin.mjs",

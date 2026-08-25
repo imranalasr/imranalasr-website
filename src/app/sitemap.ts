@@ -8,7 +8,6 @@ const STATIC_PATHS = ["", "/about", "/services", "/projects", "/quality", "/cont
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const projects = await resolveProjects();
-  const now = new Date();
 
   const entries: MetadataRoute.Sitemap = [];
 
@@ -16,11 +15,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const locale of locales) {
       entries.push({
         url: `${base}/${locale}${path}`,
-        lastModified: now,
         changeFrequency,
         priority,
         alternates: {
-          languages: Object.fromEntries(locales.map((l) => [l, `${base}/${l}${path}`])),
+          languages: {
+            ...Object.fromEntries(locales.map((l) => [l, `${base}/${l}${path}`])),
+            "x-default": `${base}/ar${path}`,
+          },
         },
       });
     }

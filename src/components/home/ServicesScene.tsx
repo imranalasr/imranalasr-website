@@ -1,22 +1,35 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import ServiceDiagram from "./ServiceDiagram";
-import { href, type Locale } from "@/i18n/config";
+import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Service } from "@/content/services";
+import SolutionsScene, { type Pack } from "./SolutionsScene";
 
 /**
- * Services as a sticky narrative rather than six identical cards.
+ * Solutions, grouped by what a client is actually buying — shaped here, drawn
+ * by `SolutionsScene`.
  *
- * The reader scrolls through six chapters; the panel beside them holds still
- * and rewrites itself — diagram, index, registered activity codes. Because
- * every group is anchored to real activity numbers, the panel doubles as a
- * verifiable reference, which is exactly what a government reviewer wants.
+ * The statutory scope is six work groups and nineteen registered activities;
+ * nobody procures in those terms. So the six groups are gathered into four
+ * packages named after the outcome — a delivered building, working
+ * infrastructure, a facility returned to hand-over standard, the works that
+ * bracket execution — and each package still shows the registered groups and
+ * activity counts underneath it. The outcome sells; the register proves.
+ *
+ * Nothing is invented to fill a package: every group here is a group the
+ * company is licensed for, and each still links through to its activity codes.
+ *
+ * Only what is drawn crosses to the client — four packages, already localised,
+ * with their groups' slugs, names and activity counts. The full service list
+ * with all nineteen bilingual activity records stays on the server.
  */
+
+/** Package → the registered work groups it is composed of. */
+const PACKAGES: Record<string, string[]> = {
+  delivery: ["building-construction"],
+  infrastructure: ["electrical-power", "roads-pavements"],
+  finishing: ["restoration-finishing"],
+  support: ["structural-support", "telecom-low-current"],
+};
+
 export default function ServicesScene({
   locale,
   t,
@@ -26,97 +39,32 @@ export default function ServicesScene({
   t: Dictionary;
   services: Service[];
 }) {
-  const root = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(0);
+  const byslug = new Map(services.map((s) => [s.slug, s]));
 
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      gsap.utils.toArray<HTMLElement>("[data-step]").forEach((step, i) => {
-        ScrollTrigger.create({
-          trigger: step,
-          start: "top 62%",
-          end: "bottom 62%",
-          onEnter: () => setActive(i),
-          onEnterBack: () => setActive(i),
-        });
+  const packs: Pack[] = t.home.solutions
+    .map((sol, i) => {
+      const groups = (PACKAGES[sol.key] ?? []).flatMap((slug) => {
+        const service = byslug.get(slug);
+        return service ? [service] : [];
       });
-    }, el);
+      return {
+        key: sol.key,
+        index: String(i + 1).padStart(2, "0"),
+        title: sol.title,
+        outcome: sol.outcome,
+        diagram: groups[0]?.slug ?? "",
+        groups: groups.map((g) => ({
+          slug: g.slug,
+          title: g.title[locale],
+          activities: g.activities.length,
+        })),
+      };
+    })
+    /* A package whose groups were all unpublished from the dashboard simply
+       stops being offered rather than showing an empty box. */
+    .filter((p) => p.groups.length > 0);
 
-    return () => ctx.revert();
-  }, [services.length]);
+  if (!packs.length) return null;
 
-  const current = services[active] ?? services[0];
-
-  return (
-    <section ref={root} className="services-scene section" data-surface-section="light" aria-labelledby="services-scene-title">
-      <div className="page services-scene-head">
-        <p className="eyebrow" data-reveal="up">
-          {t.home.servicesEyebrow}
-        </p>
-        <h2 id="services-scene-title" className="section-title" data-reveal="up">
-          {t.home.servicesTitle}
-        </h2>
-        <p className="section-lead" data-reveal="up">
-          {t.home.servicesLead}
-        </p>
-      </div>
-
-      <div className="page services-scene-body">
-        <div className="svc-steps">
-          {services.map((s, i) => (
-            <article key={s.slug} data-step="" className="svc-step" data-active={i === active}>
-              <span className="tabular svc-step-index">{s.index}</span>
-              <h3 className="svc-step-title">{s.title[locale]}</h3>
-              <p className="svc-step-lead">{s.lead[locale]}</p>
-              <ul className="svc-step-activities">
-                {s.activities.map((a) => (
-                  <li key={a.code}>
-                    <span className="tabular svc-code">{a.code}</span>
-                    <span>{a[locale]}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href={href(`/services#${s.slug}`, locale)} className="btn btn-quiet svc-step-link">
-                {t.common.readMore}
-                <span className="arrow" aria-hidden="true">
-                  {locale === "ar" ? "←" : "→"}
-                </span>
-              </Link>
-            </article>
-          ))}
-        </div>
-
-        <aside className="svc-panel" aria-hidden="true">
-          <div className="svc-panel-inner">
-            <div className="svc-panel-figure">
-              <ServiceDiagram slug={current.slug} />
-              <span className="svc-panel-grid" />
-            </div>
-            <div className="svc-panel-meta">
-              <span className="tabular svc-panel-index">{current.index}</span>
-              <p className="svc-panel-title">{current.title[locale]}</p>
-              <p className="svc-panel-count tabular">
-                {current.activities.length} {t.common.registeredActivities}
-              </p>
-            </div>
-            <ol className="svc-panel-ticks">
-              {services.map((s, i) => (
-                <li key={s.slug} data-on={i <= active} />
-              ))}
-            </ol>
-          </div>
-        </aside>
-      </div>
-
-      <div className="page services-scene-foot">
-        <Link href={href("/services", locale)} className="btn btn-ghost" data-reveal="up">
-          {t.common.allServices}
-        </Link>
-      </div>
-    </section>
-  );
+  return <SolutionsScene locale={locale} t={t} packs={packs} />;
 }
