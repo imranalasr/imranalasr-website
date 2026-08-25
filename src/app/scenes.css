@@ -685,6 +685,30 @@
     radial-gradient(ellipse 78% 58% at 50% 40%, color-mix(in oklab, var(--color-forest-600) 42%, transparent), transparent 72%),
     linear-gradient(180deg, #0e0e0d 0%, var(--color-ink) 42%, #101010 100%);
 }
+.hero-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: var(--color-ink);
+  animation: hero-veil-out 1s var(--ease-out-expo) 0.65s forwards;
+}
+.hero-veil-mark {
+  width: auto;
+  height: clamp(190px, 34vh, 420px);
+  opacity: 0;
+  animation: hero-veil-mark-in 1.25s var(--ease-out-expo) 0.08s forwards;
+}
+@keyframes hero-veil-mark-in {
+  from { opacity: 0; transform: scale(1.22); filter: blur(8px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes hero-veil-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 .hero-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 /* Two dot fields at different pitches: a fine survey grid and a sparse warm
    one over it, so the ground has depth without reading as noise. */

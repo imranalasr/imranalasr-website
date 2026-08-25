@@ -3,6 +3,7 @@ import { href, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { company } from "@/content/company";
 import HeroScene from "./HeroScene";
+import HeroSplash from "./HeroSplash";
 import HeroMark from "@/components/brand/HeroMark";
 import { MaskLine } from "@/components/MaskLines";
 import Magnetic from "@/components/motion/Magnetic";
@@ -48,12 +49,15 @@ export default function Hero({
   ];
 
   return (
-    <HeroScene>
-      <div className="hero-canvas" aria-hidden="true">
-        <span className="hero-dots" />
-        <span className="blueprint-grid hero-grid" />
-        <span className="hero-wash" />
-      </div>
+    <>
+      <HeroSplash />
+
+      <HeroScene>
+        <div className="hero-canvas" aria-hidden="true">
+          <span className="hero-dots" />
+          <span className="blueprint-grid hero-grid" />
+          <span className="hero-wash" />
+        </div>
 
       <div className="page hero-inner">
         <div className="hero-copy">
@@ -146,6 +150,7 @@ export default function Hero({
           <span className="hero-cue-label">{t.home.chapters[0].label}</span>
         </span>
       </div>
-    </HeroScene>
+      </HeroScene>
+    </>
   );
 }
