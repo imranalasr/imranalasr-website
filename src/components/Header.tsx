@@ -151,12 +151,26 @@ export default function Header({ locale, t }: { locale: Locale; t: Dictionary })
       >
         <div className="page site-header-outer">
           <div className="site-header-inner">
-            <Link href={href("/", locale)} className="brand" aria-label={t.meta.siteName}>
-              <Image src="/brand/mark.png" alt="" width={40} height={48} className="brand-mark" />
-              <span className="brand-text">
-                <span className="brand-ar">{locale === "ar" ? "عمران العصر الحديثة" : "Imran Alasr Alhaditha"}</span>
-                <span className="brand-sub">{locale === "ar" ? "للمقاولات" : "Contracting Company"}</span>
-              </span>
+            {/* The approved lockup in both of its inks, one over the other; the
+                header's tone decides which shows. The white copy is the same
+                mark again, so only the production copy carries the name. */}
+            <Link href={href("/", locale)} className="brand">
+              <Image
+                src="/brand/logo-avenir-production.svg"
+                alt={t.meta.siteName}
+                width={376}
+                height={89}
+                loading="eager"
+                className="brand-logo"
+              />
+              <Image
+                src="/brand/logo-avenir-reverse-white.svg"
+                alt=""
+                width={376}
+                height={89}
+                loading="eager"
+                className="brand-logo brand-logo-reverse"
+              />
             </Link>
 
             {/* Everything that is not the marque travels together: the links,

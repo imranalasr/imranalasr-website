@@ -318,34 +318,57 @@
 .site-header[data-open="true"] .site-header-inner::after { opacity: 0; }
 
 /* Everything that is not the marque, held to the far edge and travelling as
-   one thing. */
+   one thing. It keeps its own width: if the row ever runs short, it is the
+   lockup that gives way. */
 .site-header-cluster {
   display: flex;
   align-items: center;
   gap: clamp(0.7rem, 1.8vw, 1.9rem);
+  flex: none;
   min-width: 0;
 }
-.site-header[data-state="compact"] .brand-mark { height: clamp(30px, 2.7vw, 36px); }
-.site-header[data-state="compact"] .brand-sub { opacity: 0; }
 @media (max-width: 440px) {
   .site-header-inner { gap: 0.45rem; }
   .site-header-cluster { gap: 0.45rem; }
-  .brand-mark, .site-header[data-state="compact"] .brand-mark { height: 30px; }
 }
 
-.brand { display: inline-flex; align-items: center; gap: 0.7rem; flex: none; min-width: 0; }
-.brand-mark { height: clamp(38px, 3.8vw, 50px); width: auto; transition: height 420ms var(--ease-out-expo); }
-.site-header[data-tone="ink"] .brand-mark { filter: none; }
-.brand-text { display: grid; line-height: 1.25; }
-.brand-ar { font-family: var(--font-display); font-weight: 500; font-size: var(--text-base); letter-spacing: -0.01em; }
-/* Held in flow when the bar collects rather than removed: taking it out would
-   change the marque's height and the whole row would step. */
-.brand-sub {
-  font-size: var(--text-tiny);
-  opacity: 0.8;
-  letter-spacing: 0.04em;
-  transition: opacity 320ms var(--ease-out-expo);
+/* The marque is the approved bilingual lockup (4.24 : 1), never re-set as
+   type. It is sized by height because that is what keeps its wordmarks
+   readable: the Latin capitals are 0.128 of it, so 64px sets them at about
+   8px and the compact 52px at 6.7px.
+
+   The two inks sit one over the other and the tone fades between them with
+   the rest of the bar. The production copy carries the link's name, so it
+   is only ever faded, never display:none — a dark ground must not leave the
+   link nameless.
+
+   If the row is short anyway, `max-width` scales the lockup down whole —
+   never cropped, never stretched. */
+.brand {
+  --logo-h: 64px;
+  position: relative;
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
 }
+.site-header[data-state="compact"] .brand { --logo-h: 52px; }
+@media (max-width: 639px) {
+  .brand { --logo-h: 56px; }
+  .site-header[data-state="compact"] .brand { --logo-h: 48px; }
+}
+.brand-logo {
+  width: calc(var(--logo-h) * 4.238);
+  max-width: 100%;
+  height: auto;
+  transition: width 420ms var(--ease-out-expo), opacity 400ms var(--ease-out-expo);
+}
+.brand-logo-reverse { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.site-header[data-tone="ink"] .brand-logo { opacity: 0; }
+.site-header[data-tone="ink"] .brand-logo-reverse { opacity: 1; }
+/* The global focus ring is the light pages' green, which all but vanishes on
+   a dark ground; there the marque takes the brass its neighbours' brackets
+   use. */
+.site-header[data-tone="ink"] .brand:focus-visible { outline-color: var(--bracket); }
 
 .site-nav { display: none; gap: clamp(0.9rem, 1.9vw, 2.1rem); }
 @media (min-width: 1080px) { .site-nav { display: flex; } }
@@ -376,12 +399,12 @@
 /* The action is defined at every state, but it firms up once the header has
    collected — over a hero it is one object among several, in the bar it is
    the thing to press. */
-/* Present at every width. It is the one thing the header exists to offer, and
-   a phone is where most of the people who need it are — burying it in the
-   overlay meant the reader had to open a menu to find out that a quotation
-   can be asked for. Below the point where the wordmark and the action stop
-   fitting side by side it is the *wordmark* that gives way: the mark alone is
-   still the logo, and the action is not still an action once it is hidden. */
+/* Present at every width that can hold it beside a readable lockup. It is the
+   one thing the header exists to offer. A phone held upright cannot: next to
+   the action the lockup would drop to about 30px, where its wordmarks stop
+   being words, and the lockup cannot give way to the bare mark, because the
+   mark alone is not the approved logo. So below 480px the action moves into
+   the menu, where it is the first thing under the links. */
 .header-cta {
   display: inline-flex;
   padding: 0.72rem 1.25rem;
@@ -392,9 +415,11 @@
     color var(--dur-fast) var(--ease-out-expo), border-color var(--dur-fast) var(--ease-out-expo);
 }
 @media (max-width: 639px) {
-  .brand-text { display: none; }
   .header-cta { padding: 0.6rem 0.8rem; font-size: var(--text-micro); }
   .lang-switch { font-size: var(--text-micro); }
+}
+@media (max-width: 479px) {
+  .header-cta { display: none; }
 }
 .site-header[data-state="compact"] .header-cta {
   padding-block: 0.6rem;
@@ -2585,7 +2610,9 @@
 }
 @media (max-width: 1000px) { .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .footer-top { grid-template-columns: 1fr; } }
-.footer-lockup { width: min(300px, 78%); height: auto; }
+/* 320px sets the lockup's Latin capitals near 10px; in a narrow column it
+   takes the column and scales down whole. */
+.footer-lockup { width: min(320px, 100%); height: auto; }
 .footer-blurb { margin-block: 1.4rem; color: var(--fg-muted); font-size: var(--text-sm); max-width: var(--measure-tight); }
 .footer-profile-cta { font-size: var(--text-xs); }
 .footer-heading { font-size: var(--text-tiny); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); font-family: var(--font-mono); font-weight: 400; margin-block-end: 1.1rem; }

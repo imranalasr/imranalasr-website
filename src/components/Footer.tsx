@@ -24,15 +24,15 @@ export default async function Footer({ locale }: { locale: Locale }) {
       <div className="page">
         <div className="footer-top">
           <div className="footer-brand">
-            {/* Per-locale lockup: the mark sits beside the wordmark of the
-                language being read, at its true 2.2:1 proportion. The combined
-                AR+EN lockup is 4.2:1 with a large void in the middle, which
-                reads as stretched at footer size. */}
+            {/* The approved bilingual lockup, in its reverse ink because the
+                footer is always on the dark ground. It is the same file in
+                both languages: it carries both names, so neither page shows
+                one of them alone. */}
             <Image
-              src={locale === "ar" ? "/brand/lockup-ar-white.png" : "/brand/lockup-en-white.png"}
+              src="/brand/logo-avenir-reverse-white.svg"
               alt={t.meta.siteName}
-              width={1400}
-              height={locale === "ar" ? 642 : 636}
+              width={376}
+              height={89}
               className="footer-lockup"
             />
             <p className="footer-blurb">{t.footer.blurb}</p>
