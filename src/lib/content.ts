@@ -99,10 +99,28 @@ const KEY = {
   notifications: "site:notifications",
 };
 
+/**
+ * Public pages must remain available when the editable CMS is temporarily
+ * unreachable. The delivered content is the safe fallback; admin reads and
+ * writes intentionally keep their errors so operational failures are not
+ * hidden from staff.
+ */
+async function getPublicOverrides<T>(prefix: string): Promise<Record<string, T>> {
+  try {
+    return await getOverridesByPrefix<T>(prefix);
+  } catch (error) {
+    console.error("Public CMS overrides unavailable; serving delivered content", {
+      prefix,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    return {};
+  }
+}
+
 export async function resolveProjects(includeUnpublished = false): Promise<Project[]> {
   const cms = await listCmsProjects(includeUnpublished, false);
   if (cms) return cms;
-  const overrides = await getOverridesByPrefix<ProjectOverride>("project:");
+  const overrides = await getPublicOverrides<ProjectOverride>("project:");
   const merged = baseProjects.map((p) => {
     const o = overrides[KEY.project(p.slug)] ?? {};
     const hidden = new Set(o.hiddenImages ?? []);
@@ -149,7 +167,7 @@ export async function resolveProject(slug: string, includeUnpublished = false) {
 }
 
 export async function resolveServices(includeUnpublished = false): Promise<(Service & { published: boolean })[]> {
-  const overrides = await getOverridesByPrefix<ServiceOverride>("service:");
+  const overrides = await getPublicOverrides<ServiceOverride>("service:");
   return baseServices
     .map((s, i) => {
       const o = overrides[KEY.service(s.slug)] ?? {};
@@ -167,7 +185,7 @@ export async function resolveServices(includeUnpublished = false): Promise<(Serv
 }
 
 export async function resolveCredentials(includeUnpublished = false): Promise<Credential[]> {
-  const overrides = await getOverridesByPrefix<CredentialOverride>("credential:");
+  const overrides = await getPublicOverrides<CredentialOverride>("credential:");
   return baseCredentials
     .map((c, i) => {
       const o = overrides[KEY.credential(c.id)] ?? {};
@@ -206,7 +224,7 @@ function shapeCompany(o: CompanyOverride) {
 }
 
 export async function resolveCompany() {
-  const overrides = await getOverridesByPrefix<CompanyOverride>("company:");
+  const overrides = await getPublicOverrides<CompanyOverride>("company:");
   return shapeCompany(overrides[KEY.company] ?? {});
 }
 
@@ -286,7 +304,7 @@ function shapeHomeShowcase(projects: Project[], o: HomeShowcaseOverride): Showca
 }
 
 export async function resolveHome(projects: Project[]) {
-  const overrides = await getOverridesByPrefix<Record<string, unknown>>("home:");
+  const overrides = await getPublicOverrides<Record<string, unknown>>("home:");
   return {
     figure: shapeHomeFigure(projects, (overrides[KEY.homeFigure] ?? {}) as HomeFigureOverride),
     stats: shapeHomeStats((overrides[KEY.homeStats] ?? {}) as HomeStatsOverride),

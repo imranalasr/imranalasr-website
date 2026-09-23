@@ -106,7 +106,9 @@ export async function listCmsProjects(includeUnpublished = false, includeHidden 
       mapProject(row, imageRows.filter((item) => item.project_slug === row.slug), includeHidden)
     );
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") console.warn("CMS projects unavailable", error);
+    console.error("CMS projects unavailable; serving delivered projects", {
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
     return null;
   }
 }

@@ -19,6 +19,7 @@ const companySrc = read("src/content/company.ts");
 const certsSrc = read("src/content/certifications.ts");
 const media = JSON.parse(read("src/content/media.json"));
 const dictSrc = read("src/i18n/dictionaries.ts");
+const contentResolverSrc = read("src/lib/content.ts");
 
 /* The 19 activity codes printed on the Ministry of Commerce activity file. */
 const OFFICIAL_CODES = [
@@ -53,6 +54,20 @@ test("statutory numbers match the official documents", () => {
 
 test("operational contact email uses the requests mailbox", () => {
   assert.match(companySrc, /email: "requests@imranalasr\.sa"/);
+});
+
+test("public pages fall back to delivered content when CMS overrides are unavailable", () => {
+  assert.match(contentResolverSrc, /async function getPublicOverrides<T>\(prefix: string\)/);
+  assert.match(contentResolverSrc, /catch \(error\) \{[\s\S]*?return \{\};/);
+  for (const call of [
+    'getPublicOverrides<ProjectOverride>("project:")',
+    'getPublicOverrides<ServiceOverride>("service:")',
+    'getPublicOverrides<CredentialOverride>("credential:")',
+    'getPublicOverrides<CompanyOverride>("company:")',
+    'getPublicOverrides<Record<string, unknown>>("home:")',
+  ]) {
+    assert.ok(contentResolverSrc.includes(call), `${call} must use the public fallback`);
+  }
 });
 
 test("certificate registration numbers match the ISO certificates", () => {
